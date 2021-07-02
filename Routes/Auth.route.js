@@ -8,7 +8,7 @@ const {
   verifyRefreshToken,
 } = require("../helpers/jwt_helper");
 
-router.post("/register", async (req, res) => {
+router.post("/register", async (req, res, next) => {
   try {
     const result = await authSchema.validateAsync(req.body);
     const doesExit = await User.findOne({ email: result.email });
@@ -21,10 +21,10 @@ router.post("/register", async (req, res) => {
     const refreshToken = await signRefreshToken(savedUser.id);
     res.status(201).send({ accessToken, refreshToken });
   } catch (error) {
-    console.log(error);
+    next(error);
   }
 });
-router.post("/login", async (req, res) => {
+router.post("/login", async (req, res, next) => {
   try {
     const result = await authSchema.validateAsync(req.body);
     const user = await User.findOne({ email: result.email });
@@ -36,9 +36,11 @@ router.post("/login", async (req, res) => {
     const refreshToken = await signRefreshToken(user.id);
     console.log(accessToken);
     res.status(200).send({ accessToken, refreshToken });
-  } catch (error) {}
+  } catch (error) {
+    next(error);
+  }
 });
-router.post("/refresh-token", async (req, res) => {
+router.post("/refresh-token", async (req, res, next) => {
   try {
     const { refreshToken } = req.body;
     if (!refreshToken) console.log("Reftoken undefined");
@@ -47,7 +49,7 @@ router.post("/refresh-token", async (req, res) => {
     const newRefToken = await signRefreshToken(userId);
     res.send({ accessToken: newAccToken, refreshToken: newRefToken });
   } catch (error) {
-    console.log("Ref error");
+    next(error);
   }
 });
 router.delete("/logout", async (req, res) => {
